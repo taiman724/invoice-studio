@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Studio — Fully-Offline Japanese Invoice Generator (one-time $10)</title>
+<meta name="description" content="Create Japanese invoices (請求書), estimates, delivery notes and receipts compliant with Japan's qualified invoice system (インボイス制度). Single HTML file, fully offline, no subscription.">
+<style>
+  :root { --accent: #2563eb; --ink: #1f2937; --muted: #6b7280; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); line-height: 1.7; background: #fff; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+  header.hero { background: linear-gradient(160deg, #1e3a8a, #2563eb 60%, #3b82f6); color: #fff; padding: 60px 0 52px; text-align: center; }
+  .hero h1 { font-size: clamp(26px, 5vw, 38px); margin: 0 0 12px; }
+  .hero p.lead { font-size: clamp(15px, 2.5vw, 17px); opacity: .92; margin: 0 auto 26px; max-width: 660px; }
+  .cta { display: inline-block; padding: 14px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 16px; margin: 6px; }
+  .cta.buy { background: #fff; color: #1e3a8a; }
+  .cta.demo { background: rgba(255,255,255,.16); color: #fff; border: 1px solid rgba(255,255,255,.5); }
+  .lang { font-size: 13px; margin-top: 14px; }
+  .lang a { color: #bfdbfe; }
+  section { padding: 44px 0; }
+  section.alt { background: #f3f4f6; }
+  h2 { font-size: 23px; text-align: center; margin: 0 0 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; }
+  .card h3 { margin: 0 0 8px; font-size: 15.5px; color: var(--accent); }
+  .card p { margin: 0; font-size: 14px; color: #374151; }
+  .shot { max-width: 640px; margin: 0 auto; }
+  .shot img { width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+  .buy-box { background: #fff; border: 2px solid var(--accent); border-radius: 14px; padding: 26px; text-align: center; max-width: 560px; margin: 0 auto; }
+  .buy-box .price { font-size: 34px; font-weight: 800; color: var(--accent); }
+  .buy-box ol { text-align: left; font-size: 14px; color: #374151; max-width: 440px; margin: 14px auto; padding-left: 22px; }
+  .buy-box .cta.buy { background: var(--accent); color: #fff; }
+  .muted { color: var(--muted); font-size: 13px; }
+  footer { padding: 26px 0 38px; text-align: center; font-size: 12.5px; color: var(--muted); }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Japanese invoices, without the subscription.</h1>
+    <p class="lead">Invoice Studio is a single-file HTML app for creating Japanese invoices (請求書), estimates (見積書), delivery notes (納品書) and receipts (領収書) — compliant with Japan's qualified invoice system (インボイス制度). Open it in any browser. Fully offline. Your client data never leaves your device.</p>
+    <a class="cta demo" href="./demo.html">▶ Try the live demo (free)</a>
+    <a class="cta buy" href="#buy">Buy the full version — $10</a>
+    <div class="lang"><a href="./index.html">日本語ページはこちら →</a></div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Built for freelancers invoicing Japanese clients</h2>
+    <div class="shot"><img src="./assets/screenshot-invoice.png" alt="Sample Japanese invoice with per-rate tax breakdown and withholding tax"></div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card"><h3>Qualified invoice system ready</h3><p>Registration number (T-number), per-rate tax breakdown (10% / reduced 8% / exempt), automatic ※ marks for reduced-rate items.</p></div>
+      <div class="card"><h3>Withholding tax, automated</h3><p>Japan's 10.21% withholding for design fees, writing fees etc. — including the two-tier 20.42% calculation above ¥1,000,000.</p></div>
+      <div class="card"><h3>Fully offline</h3><p>Everything runs in your browser. No account, no server, no tracking. Ideal when client NDAs forbid cloud tools.</p></div>
+      <div class="card"><h3>Flexible tax handling</h3><p>Tax-inclusive or exclusive pricing, selectable rounding (floor / round / ceil) per Japanese accounting practice.</p></div>
+      <div class="card"><h3>Client presets & backup</h3><p>Save per-client profiles, switch in one click, export everything as JSON.</p></div>
+      <div class="card"><h3>Your branding</h3><p>Embed your logo and hanko seal image, change the accent color, print to a clean A4 PDF.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="buy">
+  <div class="wrap">
+    <div class="buy-box">
+      <h2 style="margin-bottom:8px">Get the full version</h2>
+      <div class="price">$10 <span class="muted" style="font-size:15px">one-time</span></div>
+      <p>Watermark-free HTML + manual, delivered within 24 hours.</p>
+      <ol>
+        <li>Sponsor a <b>one-time $10</b> via GitHub Sponsors using the button below</li>
+        <li>You'll receive the download link via GitHub within 24 hours</li>
+      </ol>
+      <a class="cta buy" href="https://github.com/sponsors/taiman724?frequency=one-time&amount=10">Buy via GitHub Sponsors</a>
+      <p class="muted" style="margin-top:12px">Note: the app UI and generated documents are in Japanese (that's the point!).</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Invoice Studio v1.0 — a document-drafting aid; verify tax treatment with your tax advisor.</p>
+    <p><a href="https://github.com/taiman724">© 2026 taiman724</a> — Built with AI assistance (Claude Code), reviewed and shipped by a human.</p>
+  </div>
+</footer>
+
+</body>
+</html>
