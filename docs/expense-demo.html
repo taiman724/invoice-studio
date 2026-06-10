@@ -1,0 +1,538 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Studio デモ版 — 確定申告向け 経費帳簿</title>
+<style>
+  :root {
+    --accent: #0f766e;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f3f4f6;
+    --income: #1d4ed8;
+    --expense: #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+    background: var(--bg); color: var(--ink); font-size: 14px;
+  }
+  .demo-banner { background: #111827; color: #fff; font-size: 13px; padding: 9px 16px; text-align: center; }
+  .demo-banner a { color: #93c5fd; font-weight: 700; }
+  .app { display: flex; min-height: 100vh; }
+  .panel {
+    width: 380px; min-width: 330px; background: #fff; border-right: 1px solid var(--line);
+    padding: 16px 18px 60px; overflow-y: auto; height: 100vh; position: sticky; top: 0;
+  }
+  .main { flex: 1; padding: 22px 26px 60px; overflow-y: auto; height: 100vh; }
+  @media (max-width: 880px) {
+    .app { flex-direction: column; }
+    .panel { width: 100%; height: auto; position: static; }
+    .main { height: auto; }
+  }
+  h1.brand { font-size: 16px; margin: 0 0 2px; }
+  h1.brand span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 12px; margin: 0 0 14px; }
+  fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 14px; padding: 10px 12px 12px; }
+  legend { font-weight: 700; font-size: 12.5px; padding: 0 6px; }
+  label.f { display: block; font-size: 11.5px; color: var(--muted); margin: 8px 0 3px; }
+  input, select, textarea {
+    width: 100%; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px;
+    font: inherit; font-size: 13px; background: #fff; color: var(--ink);
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .row { display: flex; gap: 8px; }
+  .row > div { flex: 1; min-width: 0; }
+  .btn {
+    display: inline-block; padding: 7px 12px; border: 1px solid var(--line); background: #fff;
+    border-radius: 7px; font: inherit; font-size: 12.5px; cursor: pointer; color: var(--ink);
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  .btn.primary:hover { filter: brightness(1.08); color: #fff; }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .typeswitch { display: flex; gap: 6px; margin-top: 4px; }
+  .typeswitch button { flex: 1; padding: 7px 0; border: 1px solid var(--line); background: #fff; border-radius: 7px; font: inherit; font-size: 13px; cursor: pointer; color: var(--muted); }
+  .typeswitch button.exp.on { background: var(--expense); border-color: var(--expense); color: #fff; font-weight: 700; }
+  .typeswitch button.inc.on { background: var(--income); border-color: var(--income); color: #fff; font-weight: 700; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kcard { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .kcard .k { font-size: 11.5px; color: var(--muted); }
+  .kcard .v { font-size: 21px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kcard .v.inc { color: var(--income); }
+  .kcard .v.exp { color: var(--expense); }
+
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .filters select, .filters input { width: auto; }
+  .filters input[type=search] { min-width: 180px; }
+
+  table.led { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 13px; }
+  table.led th { background: var(--accent); color: #fff; font-weight: 600; padding: 7px 10px; text-align: left; font-size: 12px; }
+  table.led td { border-bottom: 1px solid var(--line); padding: 6px 10px; }
+  table.led td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  table.led td.c { text-align: center; }
+  table.led tr:hover td { background: #f0fdfa; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .tag.inc { background: #dbeafe; color: var(--income); }
+  .tag.exp { background: #fee2e2; color: var(--expense); }
+  .rowbtn { border: none; background: none; cursor: pointer; font-size: 13px; padding: 2px 4px; }
+  .rowbtn.edit { color: var(--accent); }
+  .rowbtn.del { color: var(--expense); }
+  .empty { text-align: center; color: #9ca3af; padding: 26px 0; }
+
+  h2.sec { font-size: 15px; margin: 26px 0 10px; border-left: 4px solid var(--accent); padding-left: 8px; }
+  table.sum { border-collapse: collapse; background: #fff; border: 1px solid var(--line); font-size: 12.5px; width: 100%; max-width: 720px; }
+  table.sum th { background: #f9fafb; font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; font-size: 11.5px; color: var(--muted); }
+  table.sum th:first-child, table.sum td:first-child { text-align: left; }
+  table.sum td { padding: 5px 10px; border-bottom: 1px solid #f3f4f6; text-align: right; font-variant-numeric: tabular-nums; }
+  table.sum tr.total td { border-top: 2px solid var(--ink); font-weight: 700; }
+
+  /* ===== print report ===== */
+  .report-only { display: none; }
+  @media print {
+    body { background: #fff; }
+    .panel, .main, .no-print { display: none !important; }
+    .report-only { display: block; padding: 4mm; }
+    @page { size: A4 portrait; margin: 12mm; }
+    .report-only h1 { font-size: 18px; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+    .report-only h2 { font-size: 14px; margin: 18px 0 8px; }
+    .report-only table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .report-only th { background: #eee; padding: 4px 6px; border: 1px solid #bbb; }
+    .report-only td { padding: 3px 6px; border: 1px solid #ccc; text-align: right; font-variant-numeric: tabular-nums; }
+    .report-only th:first-child, .report-only td:first-child { text-align: left; }
+    .report-only .meta { font-size: 10.5px; color: #555; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner no-print">これは<b>デモ版</b>です(記帳は20件まで)。制限のない製品版は <a href="./expense.html">こちら(¥1,500 / $10)</a></div>
+<div class="app">
+  <!-- ===== Entry panel ===== -->
+  <div class="panel">
+    <h1 class="brand">Expense <span>Studio</span></h1>
+    <p class="tagline">確定申告向けの経費帳簿。完全オフライン — データはこの端末の中だけに保存されます。</p>
+
+    <fieldset>
+      <legend id="formLegend">記帳</legend>
+      <div class="typeswitch">
+        <button class="exp" id="typeExp">支出(経費)</button>
+        <button class="inc" id="typeInc">収入(売上)</button>
+      </div>
+      <div class="row">
+        <div>
+          <label class="f">日付</label>
+          <input type="date" id="eDate">
+        </div>
+        <div>
+          <label class="f">金額(円)</label>
+          <input type="number" id="eAmount" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <label class="f">科目</label>
+      <select id="eCategory"></select>
+      <input type="text" id="eCategoryCustom" placeholder="新しい科目名を入力" style="display:none;margin-top:6px">
+      <label class="f">摘要(任意)</label>
+      <input type="text" id="eDesc" placeholder="例: プリンターインク(ヨドバシ)">
+      <div class="row">
+        <div>
+          <label class="f">家事按分(事業使用率%)</label>
+          <input type="number" id="eRatio" min="1" max="100" step="1" value="100">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn primary" id="eSave" style="width:100%">追加する</button>
+        </div>
+      </div>
+      <p class="hint">家事按分: 自宅兼事務所の家賃や通信費など、事業とプライベートで共用する支出は事業使用分の%を入力します(帳簿には按分後金額で集計されます)。</p>
+      <div class="btnrow" id="editCancelRow" style="display:none">
+        <button class="btn" id="eCancel">編集をキャンセル</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>データ管理</legend>
+      <div class="btnrow">
+        <button class="btn" id="csvExport">CSV書き出し(Excel対応)</button>
+        <button class="btn" id="jsonExport">JSONバックアップ</button>
+        <label class="btn" style="margin:0">JSON復元<input type="file" id="jsonImport" accept=".json" style="display:none"></label>
+      </div>
+      <p class="hint">入力内容は自動でこのブラウザに保存されます。ブラウザのデータ消去で消えるため、定期的なJSONバックアップをおすすめします。</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>レポート</legend>
+      <button class="btn primary" onclick="window.print()" style="width:100%">🖨 年間レポートを印刷 / PDF保存</button>
+      <p class="hint">表示中の年の月別集計と科目別集計をA4で出力します。</p>
+    </fieldset>
+  </div>
+
+  <!-- ===== Ledger main ===== -->
+  <div class="main">
+    <div class="cards">
+      <div class="kcard"><div class="k" id="kIncomeLbl">収入合計</div><div class="v inc" id="kIncome">¥0</div></div>
+      <div class="kcard"><div class="k" id="kExpenseLbl">経費合計(按分後)</div><div class="v exp" id="kExpense">¥0</div></div>
+      <div class="kcard"><div class="k" id="kNetLbl">差引(所得の目安)</div><div class="v" id="kNet">¥0</div></div>
+      <div class="kcard"><div class="k">記帳件数</div><div class="v" id="kCount">0</div></div>
+    </div>
+
+    <div class="filters">
+      <select id="fYear"></select>
+      <select id="fMonth">
+        <option value="">全月</option>
+        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+      </select>
+      <select id="fCat"><option value="">全科目</option></select>
+      <input type="search" id="fText" placeholder="摘要を検索…">
+    </div>
+
+    <table class="led">
+      <thead>
+        <tr><th style="width:96px">日付</th><th style="width:64px">種別</th><th style="width:130px">科目</th><th>摘要</th><th style="width:110px;text-align:right">金額</th><th style="width:64px;text-align:right">按分%</th><th style="width:110px;text-align:right">計上額</th><th style="width:70px"></th></tr>
+      </thead>
+      <tbody id="ledRows"></tbody>
+    </table>
+
+    <h2 class="sec">月別集計(<span id="sumYear1"></span>年)</h2>
+    <table class="sum" id="monthSum"></table>
+
+    <h2 class="sec">科目別集計(<span id="sumYear2"></span>年・按分後)</h2>
+    <table class="sum" id="catSum"></table>
+  </div>
+</div>
+
+<!-- ===== Print report ===== -->
+<div class="report-only" id="report"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   Expense Studio v1.0 — 確定申告向け 経費帳簿
+   © 2026 — 購入者は商用利用可。再配布・再販売は不可。
+   ============================================================ */
+
+const LS_KEY = "expenseStudio.v1";
+
+// 収支内訳書(白色申告)の科目順に準拠
+const DEFAULT_CATS = {
+  income: ["売上(収入)金額", "家事消費", "その他の収入"],
+  expense: [
+    "仕入金額", "給料賃金", "外注工賃", "減価償却費", "貸倒金", "地代家賃", "利子割引料",
+    "租税公課", "荷造運賃", "水道光熱費", "旅費交通費", "通信費", "広告宣伝費",
+    "接待交際費", "損害保険料", "修繕費", "消耗品費", "福利厚生費", "雑費"
+  ],
+};
+
+const $ = (id) => document.getElementById(id);
+const yen = (n) => "¥" + Math.round(n).toLocaleString("ja-JP");
+const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let state = { entries: [], customCats: { income: [], expense: [] } };
+let form = { type: "expense", editId: null };
+let nextId = 1;
+
+/* ---------- 計上額(按分後) ---------- */
+const booked = (e) => Math.round(e.amount * (e.ratio || 100) / 100);
+
+/* ---------- persistence ---------- */
+function persist() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ entries: state.entries, customCats: state.customCats, nextId })); } catch (err) {}
+}
+function loadPersisted() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    state.entries = Array.isArray(d.entries) ? d.entries : [];
+    state.customCats = d.customCats || { income: [], expense: [] };
+    nextId = d.nextId || (Math.max(0, ...state.entries.map(e => e.id)) + 1);
+  } catch (err) {}
+}
+
+/* ---------- categories ---------- */
+function catsFor(type) {
+  return DEFAULT_CATS[type].concat(state.customCats[type] || []);
+}
+function renderCatSelect() {
+  const sel = $("eCategory");
+  const cats = catsFor(form.type);
+  sel.innerHTML = cats.map(c => `<option>${esc(c)}</option>`).join("") + `<option value="__custom__">+ 新しい科目を追加…</option>`;
+}
+
+/* ---------- filters ---------- */
+function years() {
+  const ys = new Set(state.entries.map(e => +e.date.slice(0, 4)));
+  ys.add(new Date().getFullYear());
+  return [...ys].sort();
+}
+function renderYearSelect() {
+  const sel = $("fYear"), cur = sel.value;
+  sel.innerHTML = years().map(y => `<option value="${y}">${y}年</option>`).join("");
+  sel.value = cur && [...sel.options].some(o => o.value === cur) ? cur : String(new Date().getFullYear());
+}
+function renderCatFilter() {
+  const sel = $("fCat"), cur = sel.value;
+  const all = [...new Set(catsFor("income").concat(catsFor("expense")))];
+  sel.innerHTML = `<option value="">全科目</option>` + all.map(c => `<option>${esc(c)}</option>`).join("");
+  if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+}
+
+function filteredEntries() {
+  const y = $("fYear").value, m = $("fMonth").value, c = $("fCat").value, t = $("fText").value.trim();
+  return state.entries
+    .filter(e => e.date.slice(0, 4) === y)
+    .filter(e => !m || +e.date.slice(5, 7) === +m)
+    .filter(e => !c || e.category === c)
+    .filter(e => !t || (e.desc || "").includes(t) || e.category.includes(t))
+    .sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id);
+}
+
+/* ---------- render ---------- */
+function render() {
+  renderYearSelect(); renderCatFilter();
+  const list = filteredEntries();
+  const y = $("fYear").value;
+
+  // ledger rows
+  const tb = $("ledRows");
+  tb.innerHTML = "";
+  for (const e of list) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${esc(e.date)}</td>
+      <td class="c"><span class="tag ${e.type === "income" ? "inc" : "exp"}">${e.type === "income" ? "収入" : "支出"}</span></td>
+      <td>${esc(e.category)}</td>
+      <td>${esc(e.desc || "")}</td>
+      <td class="r">${yen(e.amount)}</td>
+      <td class="r">${e.ratio || 100}%</td>
+      <td class="r"><b>${yen(booked(e))}</b></td>
+      <td class="c">
+        <button class="rowbtn edit" data-edit="${e.id}" title="編集">✎</button>
+        <button class="rowbtn del" data-del="${e.id}" title="削除">✕</button>
+      </td>`;
+    tb.appendChild(tr);
+  }
+  if (!list.length) tb.innerHTML = `<tr><td colspan="8" class="empty">この条件の記帳はまだありません。左のフォームから追加してください。</td></tr>`;
+
+  // KPI cards (フィルター期間に追随)
+  const inc = list.filter(e => e.type === "income").reduce((s, e) => s + booked(e), 0);
+  const exp = list.filter(e => e.type === "expense").reduce((s, e) => s + booked(e), 0);
+  const m = $("fMonth").value;
+  const period = m ? `${y}年${m}月` : `${y}年`;
+  $("kIncomeLbl").textContent = `収入合計(${period})`;
+  $("kExpenseLbl").textContent = `経費合計(${period}・按分後)`;
+  $("kIncome").textContent = yen(inc);
+  $("kExpense").textContent = yen(exp);
+  $("kNet").textContent = yen(inc - exp);
+  $("kNet").style.color = inc - exp >= 0 ? "var(--income)" : "var(--expense)";
+  $("kCount").textContent = list.length;
+
+  // 月別集計(年全体)
+  const yearList = state.entries.filter(e => e.date.slice(0, 4) === y);
+  $("sumYear1").textContent = y; $("sumYear2").textContent = y;
+  const ms = $("monthSum");
+  let h = `<tr><th>月</th><th>収入</th><th>経費(按分後)</th><th>差引</th></tr>`;
+  let ti = 0, te = 0;
+  for (let mm = 1; mm <= 12; mm++) {
+    const mes = yearList.filter(e => +e.date.slice(5, 7) === mm);
+    const i = mes.filter(e => e.type === "income").reduce((s, e) => s + booked(e), 0);
+    const x = mes.filter(e => e.type === "expense").reduce((s, e) => s + booked(e), 0);
+    ti += i; te += x;
+    h += `<tr><td>${mm}月</td><td>${i ? yen(i) : "—"}</td><td>${x ? yen(x) : "—"}</td><td>${(i || x) ? yen(i - x) : "—"}</td></tr>`;
+  }
+  h += `<tr class="total"><td>合計</td><td>${yen(ti)}</td><td>${yen(te)}</td><td>${yen(ti - te)}</td></tr>`;
+  ms.innerHTML = h;
+
+  // 科目別集計(年全体・按分後)
+  const cs = $("catSum");
+  const byCat = {};
+  for (const e of yearList) {
+    byCat[e.category] = byCat[e.category] || { type: e.type, sum: 0, n: 0 };
+    byCat[e.category].sum += booked(e);
+    byCat[e.category].n++;
+  }
+  let ch = `<tr><th>科目</th><th>種別</th><th>件数</th><th>金額(按分後)</th></tr>`;
+  const order = catsFor("income").concat(catsFor("expense"));
+  const keys = Object.keys(byCat).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  for (const k of keys) {
+    const g = byCat[k];
+    ch += `<tr><td>${esc(k)}</td><td>${g.type === "income" ? "収入" : "経費"}</td><td>${g.n}</td><td>${yen(g.sum)}</td></tr>`;
+  }
+  if (!keys.length) ch += `<tr><td colspan="4" style="text-align:center;color:#9ca3af">記帳がありません</td></tr>`;
+  cs.innerHTML = ch;
+
+  renderReport(y, yearList, { ti, te });
+  persist();
+}
+
+/* ---------- print report ---------- */
+function renderReport(y, yearList, totals) {
+  const r = $("report");
+  let mh = `<tr><th>月</th><th>収入</th><th>経費(按分後)</th><th>差引</th></tr>`;
+  for (let mm = 1; mm <= 12; mm++) {
+    const mes = yearList.filter(e => +e.date.slice(5, 7) === mm);
+    const i = mes.filter(e => e.type === "income").reduce((s, e) => s + booked(e), 0);
+    const x = mes.filter(e => e.type === "expense").reduce((s, e) => s + booked(e), 0);
+    mh += `<tr><td>${mm}月</td><td>${yen(i)}</td><td>${yen(x)}</td><td>${yen(i - x)}</td></tr>`;
+  }
+  mh += `<tr><td><b>合計</b></td><td><b>${yen(totals.ti)}</b></td><td><b>${yen(totals.te)}</b></td><td><b>${yen(totals.ti - totals.te)}</b></td></tr>`;
+
+  const byCat = {};
+  for (const e of yearList) {
+    byCat[e.category] = byCat[e.category] || { type: e.type, sum: 0 };
+    byCat[e.category].sum += booked(e);
+  }
+  let chh = `<tr><th>科目</th><th>種別</th><th>金額(按分後)</th></tr>`;
+  for (const k of Object.keys(byCat)) {
+    chh += `<tr><td>${esc(k)}</td><td>${byCat[k].type === "income" ? "収入" : "経費"}</td><td>${yen(byCat[k].sum)}</td></tr>`;
+  }
+
+  r.innerHTML = `
+    <h1>経費帳簿 年間レポート — ${y}年</h1>
+    <p class="meta">出力: Expense Studio / 金額は家事按分適用後。確定申告書類への転記時は原始帳票(領収書等)と照合してください。</p>
+    <h2>月別集計</h2><table>${mh}</table>
+    <h2>科目別集計</h2><table>${chh}</table>`;
+}
+
+/* ---------- form ---------- */
+function setType(t) {
+  form.type = t;
+  $("typeExp").classList.toggle("on", t === "expense");
+  $("typeInc").classList.toggle("on", t === "income");
+  renderCatSelect();
+}
+function resetForm() {
+  form.editId = null;
+  $("formLegend").textContent = "記帳";
+  $("eSave").textContent = "追加する";
+  $("editCancelRow").style.display = "none";
+  $("eAmount").value = ""; $("eDesc").value = ""; $("eRatio").value = "100";
+  $("eCategoryCustom").style.display = "none"; $("eCategoryCustom").value = "";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadPersisted();
+  $("eDate").value = new Date().toISOString().slice(0, 10);
+  setType("expense");
+  render();
+
+  $("typeExp").addEventListener("click", () => setType("expense"));
+  $("typeInc").addEventListener("click", () => setType("income"));
+
+  $("eCategory").addEventListener("change", (e) => {
+    $("eCategoryCustom").style.display = e.target.value === "__custom__" ? "" : "none";
+  });
+
+  $("eSave").addEventListener("click", () => {
+    const date = $("eDate").value;
+    const amount = Math.round(num($("eAmount").value));
+    let category = $("eCategory").value;
+    if (category === "__custom__") {
+      category = $("eCategoryCustom").value.trim();
+      if (!category) { alert("科目名を入力してください。"); return; }
+      if (!catsFor(form.type).includes(category)) state.customCats[form.type].push(category);
+    }
+    const ratio = Math.min(100, Math.max(1, Math.round(num($("eRatio").value) || 100)));
+    if (!date) { alert("日付を入力してください。"); return; }
+    if (amount <= 0) { alert("金額を入力してください。"); return; }
+
+    if (form.editId == null && state.entries.length >= 20) {
+      alert("デモ版は20件まで記帳できます。製品版(無制限)をご検討ください!");
+      return;
+    }
+    if (form.editId != null) {
+      const e = state.entries.find(x => x.id === form.editId);
+      if (e) Object.assign(e, { date, amount, category, ratio, type: form.type, desc: $("eDesc").value.trim() });
+    } else {
+      state.entries.push({ id: nextId++, type: form.type, date, amount, category, ratio, desc: $("eDesc").value.trim() });
+    }
+    resetForm(); render();
+  });
+
+  $("eCancel").addEventListener("click", () => { resetForm(); });
+
+  $("ledRows").addEventListener("click", (e) => {
+    const editId = e.target.dataset.edit, delId = e.target.dataset.del;
+    if (delId !== undefined) {
+      if (!confirm("この記帳を削除しますか?")) return;
+      state.entries = state.entries.filter(x => x.id !== +delId);
+      render(); return;
+    }
+    if (editId !== undefined) {
+      const en = state.entries.find(x => x.id === +editId);
+      if (!en) return;
+      form.editId = en.id;
+      setType(en.type);
+      $("eDate").value = en.date; $("eAmount").value = en.amount;
+      $("eCategory").value = en.category; $("eDesc").value = en.desc || ""; $("eRatio").value = en.ratio || 100;
+      $("formLegend").textContent = "記帳を編集中";
+      $("eSave").textContent = "更新する";
+      $("editCancelRow").style.display = "";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+
+  for (const id of ["fYear", "fMonth", "fCat"]) $(id).addEventListener("change", render);
+  $("fText").addEventListener("input", render);
+
+  // CSV (UTF-8 BOM付き — Excelで文字化けしない)
+  $("csvExport").addEventListener("click", () => {
+    const y = $("fYear").value;
+    const rows = [["日付", "種別", "科目", "摘要", "金額", "按分%", "計上額(按分後)"]];
+    for (const e of state.entries.filter(e => e.date.slice(0, 4) === y).sort((a, b) => a.date > b.date ? 1 : -1)) {
+      rows.push([e.date, e.type === "income" ? "収入" : "支出", e.category, e.desc || "", e.amount, e.ratio || 100, booked(e)]);
+    }
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `expense-studio-${y}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $("jsonExport").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ entries: state.entries, customCats: state.customCats }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "expense-studio-backup.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $("jsonImport").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const d = JSON.parse(rd.result);
+        if (!Array.isArray(d.entries)) throw new Error("entries がありません");
+        state.entries = d.entries;
+        state.customCats = d.customCats || { income: [], expense: [] };
+        nextId = Math.max(0, ...state.entries.map(x => x.id)) + 1;
+        render();
+        alert("復元しました。");
+      } catch (err) { alert("読み込みに失敗しました: " + err.message); }
+      e.target.value = "";
+    };
+    rd.readAsText(file);
+  });
+});
+
+// テスト用フック
+window.__expenseStudio = {
+  getState: () => state,
+  setEntries: (es) => { state.entries = es; nextId = Math.max(0, ...es.map(x => x.id)) + 1; render(); },
+  booked,
+};
+</script>
+</body>
+</html>
