@@ -128,7 +128,7 @@ function calc() {
   const tax = withTax ? Math.floor(base * 0.10) : 0;
   const net = base + tax - wh;
 
-  $("rWh").textContent = "−" + yen(wh).slice(1);
+  $("rWh").textContent = "−¥" + Math.round(wh).toLocaleString("ja-JP");
   $("rTax").textContent = yen(tax);
   $("rTaxRow").style.display = withTax ? "" : "none";
   $("rBill").textContent = yen(net);
