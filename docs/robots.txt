@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://taiman724.github.io/invoice-studio/sitemap.xml
