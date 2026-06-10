@@ -1,0 +1,473 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contract Studio デモ版 — 業務委託契約書ジェネレーター</title>
+<style>
+  :root {
+    --accent: #7c3aed;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f3f4f6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+    background: var(--bg); color: var(--ink); font-size: 14px;
+  }
+  .demo-banner { background: #111827; color: #fff; font-size: 13px; padding: 9px 16px; text-align: center; }
+  .demo-banner a { color: #c4b5fd; font-weight: 700; }
+  .paper { position: relative; }
+  .paper::after {
+    content: "SAMPLE — デモ版(製品版では表示されません)";
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    transform: rotate(-28deg); font-size: 46px; font-weight: 800; letter-spacing: .1em;
+    color: rgba(120,120,120,.16); pointer-events: none; text-align: center;
+  }
+  .app { display: flex; min-height: 100vh; }
+  .panel {
+    width: 440px; min-width: 370px; background: #fff; border-right: 1px solid var(--line);
+    padding: 16px 18px 60px; overflow-y: auto; height: 100vh; position: sticky; top: 0;
+  }
+  .stage { flex: 1; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 14px; overflow-y: auto; height: 100vh; }
+  @media (max-width: 920px) {
+    .app { flex-direction: column; }
+    .panel { width: 100%; height: auto; position: static; }
+    .stage { height: auto; }
+  }
+  h1.brand { font-size: 16px; margin: 0 0 2px; }
+  h1.brand span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 12px; margin: 0 0 14px; }
+  fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 14px; padding: 10px 12px 12px; }
+  legend { font-weight: 700; font-size: 12.5px; padding: 0 6px; }
+  label.f { display: block; font-size: 11.5px; color: var(--muted); margin: 8px 0 3px; }
+  input, select, textarea {
+    width: 100%; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px;
+    font: inherit; font-size: 13px; background: #fff; color: var(--ink);
+  }
+  textarea { resize: vertical; min-height: 48px; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .row { display: flex; gap: 8px; }
+  .row > div { flex: 1; min-width: 0; }
+  .btn {
+    display: inline-block; padding: 7px 12px; border: 1px solid var(--line); background: #fff;
+    border-radius: 7px; font: inherit; font-size: 12.5px; cursor: pointer; color: var(--ink);
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; margin-top: 8px; cursor: pointer; }
+  .check input { width: auto; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .warn {
+    background: #fef9c3; border: 1px solid #fde047; border-radius: 8px;
+    font-size: 11.5px; color: #713f12; padding: 8px 10px; margin-bottom: 14px; line-height: 1.55;
+  }
+
+  /* ===== Paper ===== */
+  .paper {
+    width: 210mm; min-height: 297mm; background: #fff; box-shadow: 0 2px 14px rgba(0,0,0,.13);
+    padding: 20mm 18mm; color: #111827; font-size: 12.5px; line-height: 1.9;
+  }
+  .c-title { text-align: center; font-size: 22px; font-weight: 700; letter-spacing: .3em; text-indent: .3em; margin: 0 0 18px; }
+  .c-pre { margin-bottom: 14px; }
+  .c-art { margin-bottom: 10px; }
+  .c-art h3 { font-size: 13px; margin: 0 0 2px; font-weight: 700; }
+  .c-art p { margin: 0 0 2px; }
+  .c-art ol { margin: 0; padding-left: 2.2em; }
+  .c-art ol li { margin-bottom: 2px; }
+  .c-close { margin: 18px 0 26px; }
+  .c-date { margin-bottom: 22px; }
+  .c-sign { display: flex; flex-direction: column; gap: 26px; }
+  .c-sign .party { display: flex; gap: 14px; }
+  .c-sign .party .role { font-weight: 700; width: 3em; }
+  .c-sign .party .lines { flex: 1; }
+  .c-sign .party .lines div { border-bottom: 1px solid #9ca3af; min-height: 22px; margin-bottom: 8px; white-space: pre-line; }
+  .c-sign .party .lines .who { display: flex; justify-content: space-between; align-items: flex-end; }
+  .c-sign .party .lines .who span.in { font-size: 11px; color: #6b7280; }
+
+  @media print {
+    body { background: #fff; }
+    .panel, .toolbar, .no-print { display: none !important; }
+    .app, .stage { display: block; padding: 0; height: auto; overflow: visible; }
+    .paper { box-shadow: none; width: auto; min-height: 0; padding: 6mm 8mm; }
+    @page { size: A4 portrait; margin: 14mm 12mm; }
+    .c-art { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner no-print">これは透かし入りの<b>デモ版</b>です(全機能をお試しいただけます)。透かしのない製品版は <a href="./contract.html">こちら(¥1,980 / $13)</a></div>
+<div class="app">
+  <div class="panel">
+    <h1 class="brand">Contract <span>Studio</span></h1>
+    <p class="tagline">業務委託契約書(準委任/請負)を数分で。完全オフライン — 入力データは端末の外に出ません。</p>
+    <div class="warn">本ツールは一般的な条文構成のたたき台を作る補助ツールです。法的助言ではありません。重要な契約は弁護士のリーガルチェックを受けてください。</div>
+
+    <fieldset>
+      <legend>契約の基本</legend>
+      <div class="row">
+        <div>
+          <label class="f">契約形態</label>
+          <select id="cType">
+            <option value="quasi">準委任(業務の遂行)</option>
+            <option value="ukeoi">請負(成果物の完成)</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">契約締結日</label>
+          <input type="date" id="cDate">
+        </div>
+      </div>
+      <label class="f">業務の内容(改行で箇条書き)</label>
+      <textarea id="cScope" placeholder="Webサイトのデザイン制作&#10;バナー画像の作成"></textarea>
+      <div class="row">
+        <div>
+          <label class="f">契約開始日</label>
+          <input type="date" id="cStart">
+        </div>
+        <div>
+          <label class="f">契約終了日</label>
+          <input type="date" id="cEnd">
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="cAutoRenew" checked> 自動更新条項を入れる(期間満了1か月前までに申し出がなければ同条件で更新)</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>当事者</legend>
+      <label class="f">甲(委託者・クライアント)名称</label>
+      <input type="text" id="cKou" placeholder="株式会社サンプル">
+      <label class="f">甲 住所</label>
+      <input type="text" id="cKouAddr" placeholder="東京都千代田区…">
+      <label class="f">乙(受託者・あなた)名称</label>
+      <input type="text" id="cOtsu" placeholder="山田 太郎(屋号: 山田デザイン事務所)">
+      <label class="f">乙 住所</label>
+      <input type="text" id="cOtsuAddr" placeholder="東京都渋谷区…">
+    </fieldset>
+
+    <fieldset>
+      <legend>報酬・支払</legend>
+      <div class="row">
+        <div>
+          <label class="f">報酬体系</label>
+          <select id="cFeeType">
+            <option value="monthly">月額固定</option>
+            <option value="hourly">時間単価</option>
+            <option value="lump">一括(成果物単位)</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">金額(円・税抜)</label>
+          <input type="number" id="cFee" placeholder="300000">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="f">締め日</label>
+          <select id="cCutoff"><option>月末</option><option>15日</option><option>20日</option><option>25日</option></select>
+        </div>
+        <div>
+          <label class="f">支払期限</label>
+          <select id="cPayBy"><option>翌月末日</option><option>翌月15日</option><option>翌月20日</option><option>翌々月末日</option></select>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="cTransferFee" checked> 振込手数料は甲の負担とする</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>条件の選択</legend>
+      <div class="row">
+        <div>
+          <label class="f">再委託</label>
+          <select id="cSubcontract">
+            <option value="no">甲の事前承諾がある場合のみ可</option>
+            <option value="yes">乙の裁量で可(乙が責任を負う)</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">知的財産権の帰属</label>
+          <select id="cIp">
+            <option value="kou">検収・支払完了後に甲へ移転</option>
+            <option value="otsu">乙に留保(甲へ利用許諾)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="f">秘密保持の存続期間</label>
+          <select id="cNda"><option>契約終了後3年間</option><option>契約終了後1年間</option><option>契約終了後5年間</option><option>無期限</option></select>
+        </div>
+        <div>
+          <label class="f">中途解約の予告</label>
+          <select id="cNotice"><option>1か月前</option><option>2週間前</option><option>2か月前</option><option>3か月前</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="f">損害賠償の上限</label>
+          <select id="cLiability">
+            <option value="cap">直近6か月の報酬総額を上限</option>
+            <option value="cap12">直近12か月の報酬総額を上限</option>
+            <option value="none">上限なし(法定どおり)</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">合意管轄裁判所</label>
+          <input type="text" id="cCourt" value="東京地方裁判所">
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="cElectronic" checked> 電子契約として作成(印紙不要の文言+電磁的記録条項)</label>
+      <label class="f">特約事項(任意・改行で複数)</label>
+      <textarea id="cSpecial" placeholder="例: 乙の実績としての公開を甲は許諾する。"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>保存</legend>
+      <div class="btnrow" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="jsonExport">JSON書き出し</button>
+        <label class="btn" style="margin:0">JSON読み込み<input type="file" id="jsonImport" accept=".json" style="display:none"></label>
+      </div>
+      <p class="hint">入力内容は自動でこのブラウザに保存されます。</p>
+    </fieldset>
+  </div>
+
+  <div class="stage">
+    <div class="toolbar no-print">
+      <button class="btn primary" onclick="window.print()">🖨 印刷 / PDF保存</button>
+    </div>
+    <div class="paper" id="paper"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   Contract Studio v1.0 — 業務委託契約書ジェネレーター
+   © 2026 — 購入者は商用利用可。再配布・再販売は不可。
+   本ツールの出力は法的助言ではありません。
+   ============================================================ */
+
+const LS_KEY = "contractStudio.v1";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const yen = (n) => { const x = parseFloat(n); return isNaN(x) ? "____" : x.toLocaleString("ja-JP"); };
+const jdate = (s) => { if (!s) return "____年__月__日"; const [y, m, d] = s.split("-"); return `${y}年${+m}月${+d}日`; };
+
+const FIELDS = ["cType","cDate","cScope","cStart","cEnd","cKou","cKouAddr","cOtsu","cOtsuAddr",
+  "cFeeType","cFee","cCutoff","cPayBy","cSubcontract","cIp","cNda","cNotice","cLiability","cCourt","cSpecial"];
+const CHECKS = ["cAutoRenew","cTransferFee","cElectronic"];
+
+function getState() {
+  const s = {};
+  for (const f of FIELDS) s[f] = $(f).value;
+  for (const c of CHECKS) s[c] = $(c).checked;
+  return s;
+}
+function setState(s) {
+  for (const f of FIELDS) if (s[f] !== undefined) $(f).value = s[f];
+  for (const c of CHECKS) if (s[c] !== undefined) $(c).checked = s[c];
+}
+
+/* ---------- 条文生成 ----------
+   各条 = { title, body: string | string[] (項リスト) }
+   契約形態・オプションに応じて構築し、最後に通し番号を振る。 */
+function buildArticles(s) {
+  const isUkeoi = s.cType === "ukeoi";
+  const A = [];
+
+  A.push({ title: "目的", body:
+    `甲は乙に対し、本契約に定める条件に従い第2条の業務(以下「本件業務」という。)を委託し、乙はこれを受託する。本契約は${isUkeoi ? "民法上の請負契約" : "民法上の準委任契約"}として締結されるものとする。` });
+
+  const scopeItems = (s.cScope || "").split("\n").map(t => t.trim()).filter(Boolean);
+  A.push({ title: "業務内容", body: scopeItems.length
+    ? [`乙が遂行する本件業務の内容は、次の各号に定めるとおりとする。`, ...scopeItems.map((t, i) => `(${i + 1}) ${t}`)]
+    : `乙が遂行する本件業務の内容は、別途甲乙協議のうえ書面(電磁的方法を含む。)で定めるとおりとする。` });
+
+  let termBody = `本契約の有効期間は、${jdate(s.cStart)}から${jdate(s.cEnd)}までとする。`;
+  if (s.cAutoRenew) termBody += `ただし、期間満了の1か月前までに甲乙いずれからも書面(電磁的方法を含む。)による別段の意思表示がないときは、本契約は同一条件でさらに1年間更新されるものとし、以後も同様とする。`;
+  A.push({ title: "契約期間", body: termBody });
+
+  const feeDesc = s.cFeeType === "monthly" ? `月額金${yen(s.cFee)}円(消費税別)`
+    : s.cFeeType === "hourly" ? `1時間あたり金${yen(s.cFee)}円(消費税別)`
+    : `金${yen(s.cFee)}円(消費税別)`;
+  const payBody = [
+    `甲は乙に対し、本件業務の対価として${feeDesc}を支払う。`,
+    s.cFeeType === "lump" && isUkeoi
+      ? `甲は、前項の対価を、第${"検収"}条の検収完了後、乙の発行する請求書に基づき、${s.cPayBy}までに乙の指定する銀行口座に振り込む方法により支払う。`
+      : `甲は、前項の対価を、毎月${s.cCutoff}締めで計算し、乙の発行する請求書に基づき、${s.cPayBy}までに乙の指定する銀行口座に振り込む方法により支払う。`,
+  ];
+  if (s.cTransferFee) payBody.push(`振込手数料は甲の負担とする。`);
+  A.push({ title: "委託料および支払方法", body: payBody, key: "fee" });
+
+  A.push({ title: "費用の負担", body:
+    `本件業務の遂行に要する費用は、本契約に別段の定めがある場合または事前に甲の承諾を得た場合を除き、乙の負担とする。` });
+
+  if (isUkeoi) {
+    A.push({ title: "納入および検収", key: "kensyu", body: [
+      `乙は、甲乙別途合意する期日までに、本件業務の成果物(以下「本成果物」という。)を甲に納入する。`,
+      `甲は、本成果物の納入後10営業日以内に検査を行い、合否を乙に通知する。当該期間内に甲から書面(電磁的方法を含む。)による異議の通知がないときは、本成果物は検査に合格したものとみなす。`,
+      `検査に不合格となった場合、乙は甲乙協議のうえ定める相当期間内に、無償で修補のうえ再納入する。`,
+    ]});
+    A.push({ title: "契約不適合責任", body:
+      `本成果物が種類、品質または数量に関して本契約の内容に適合しない場合、甲は乙に対し、検収完了後6か月以内に限り、無償での修補を請求することができる。本項の責任は、当該不適合が乙の責めに帰すべき事由による場合に限るものとする。` });
+  } else {
+    A.push({ title: "業務の遂行および報告", body: [
+      `乙は、善良な管理者の注意をもって本件業務を遂行する。`,
+      `乙は、甲の求めがあったときは、本件業務の遂行状況を遅滞なく甲に報告する。`,
+      `本件業務の遂行方法、就業場所および就業時間は乙の裁量により定めるものとし、甲は乙に対して指揮命令を行わないものとする。`,
+    ]});
+  }
+
+  A.push({ title: "再委託", body: s.cSubcontract === "yes"
+    ? `乙は、自己の責任において、本件業務の全部または一部を第三者に再委託することができる。この場合、乙は再委託先の行為について甲に対し一切の責任を負う。`
+    : `乙は、甲の事前の書面(電磁的方法を含む。)による承諾を得た場合を除き、本件業務の全部または一部を第三者に再委託してはならない。承諾を得て再委託する場合、乙は再委託先の行為について甲に対し一切の責任を負う。` });
+
+  A.push({ title: "知的財産権の帰属", body: s.cIp === "kou"
+    ? [
+      `本件業務の遂行により生じた成果物に関する著作権(著作権法第27条および第28条の権利を含む。)その他の知的財産権は、${isUkeoi ? "検収完了" : "当該成果物に係る委託料"}および対価の支払が完了した時点で、乙から甲に移転する。`,
+      `乙は、甲および甲の指定する第三者に対し、著作者人格権を行使しない。`,
+      `前二項にかかわらず、乙が本契約締結前から保有していた知的財産権および汎用的に利用可能なノウハウ・ライブラリ等は乙に留保され、乙は甲に対し、本成果物の利用に必要な範囲でその利用を許諾する。`,
+    ]
+    : [
+      `本件業務の遂行により生じた成果物に関する著作権その他の知的財産権は、乙に留保される。`,
+      `乙は甲に対し、本成果物を本契約の目的の範囲内で利用することを許諾する。利用許諾の範囲を超える利用条件は、甲乙別途協議のうえ定める。`,
+    ]});
+
+  A.push({ title: "秘密保持", body: [
+    `甲および乙は、本契約に関連して相手方から開示を受けた営業上、技術上その他一切の秘密情報を、相手方の事前の書面(電磁的方法を含む。)による承諾なく第三者に開示または漏えいしてはならず、本契約の目的以外に使用してはならない。`,
+    `前項の義務は、本契約終了後も${s.cNda === "無期限" ? "存続する" : s.cNda.replace("契約終了後", "") + "存続する"}ものとする。`,
+    `公知の情報、開示の時点で既に保有していた情報、正当な権限を有する第三者から秘密保持義務を負わずに取得した情報および法令に基づき開示が義務付けられた情報は、秘密情報に含まれない。`,
+  ]});
+
+  A.push({ title: "個人情報の取扱い", body:
+    `甲および乙は、本件業務に関連して取り扱う個人情報について、個人情報の保護に関する法律その他関係法令を遵守し、漏えい、滅失または毀損の防止のために必要かつ適切な措置を講じる。` });
+
+  A.push({ title: "契約の解除", body: [
+    `甲または乙は、相手方が次の各号のいずれかに該当したときは、何らの催告なく直ちに本契約の全部または一部を解除することができる。`,
+    `(1) 本契約に違反し、相当期間を定めた催告後も是正されないとき`,
+    `(2) 支払停止もしくは支払不能となり、または破産手続開始、民事再生手続開始その他これらに類する手続の申立てがあったとき`,
+    `(3) 差押え、仮差押えその他の強制執行または滞納処分を受けたとき`,
+    `(4) その他本契約を継続し難い重大な事由が生じたとき`,
+  ]});
+
+  A.push({ title: "中途解約", body:
+    `甲または乙は、${s.cNotice}までに相手方に書面(電磁的方法を含む。)で通知することにより、本契約を解約することができる。この場合、甲は、解約日までに乙が遂行した本件業務の対価を、既に定めた条件に従い乙に支払う。` });
+
+  A.push({ title: "損害賠償", body: s.cLiability === "none"
+    ? `甲または乙は、本契約に違反して相手方に損害を与えたときは、相手方に生じた損害を賠償する責任を負う。`
+    : `甲または乙は、本契約に違反して相手方に損害を与えたときは、相手方に生じた直接かつ現実の損害に限り、賠償する責任を負う。ただし、その賠償額の累計は、${s.cLiability === "cap12" ? "損害発生時点から遡って12か月間" : "損害発生時点から遡って6か月間"}に甲が乙に支払った委託料の総額を上限とする。なお、本項の上限は、故意または重過失による損害には適用しない。` });
+
+  A.push({ title: "反社会的勢力の排除", body: [
+    `甲および乙は、自己またはその役員もしくは実質的に経営に関与する者が、暴力団、暴力団員、暴力団準構成員その他これらに準ずる者(以下「反社会的勢力」という。)に該当しないことを表明し、将来にわたって該当しないことを確約する。`,
+    `甲または乙は、相手方が前項に違反した場合、何らの催告なく直ちに本契約を解除することができる。この場合、解除された当事者は、解除により生じた損害の賠償を相手方に請求することができない。`,
+  ]});
+
+  A.push({ title: "権利義務の譲渡禁止", body:
+    `甲および乙は、相手方の事前の書面(電磁的方法を含む。)による承諾なく、本契約上の地位または本契約から生じる権利義務の全部もしくは一部を第三者に譲渡し、または担保に供してはならない。` });
+
+  const specials = (s.cSpecial || "").split("\n").map(t => t.trim()).filter(Boolean);
+  if (specials.length) {
+    A.push({ title: "特約事項", body: specials.length === 1 ? specials[0] : specials.map((t, i) => `(${i + 1}) ${t}`) });
+  }
+
+  A.push({ title: "協議事項", body:
+    `本契約に定めのない事項または本契約の解釈に疑義が生じた事項については、甲乙誠意をもって協議のうえ解決する。` });
+
+  A.push({ title: "合意管轄", body:
+    `本契約に関する一切の紛争については、${s.cCourt || "____地方裁判所"}を第一審の専属的合意管轄裁判所とする。` });
+
+  return A;
+}
+
+function render() {
+  const s = getState();
+  const arts = buildArticles(s);
+  const isUkeoi = s.cType === "ukeoi";
+
+  // 「検収」条の条番号を支払条文に差し込む(請負・一括のとき)
+  const kensyuIdx = arts.findIndex(a => a.key === "kensyu");
+  if (kensyuIdx >= 0) {
+    const feeArt = arts.find(a => a.key === "fee");
+    if (feeArt && Array.isArray(feeArt.body)) {
+      feeArt.body = feeArt.body.map(t => t.replace(`第検収条`, `第${kensyuIdx + 1}条`));
+    }
+  }
+
+  let html = `<h2 class="c-title">業務委託契約書</h2>`;
+  html += `<div class="c-pre">${esc(s.cKou || "____________")}(以下「甲」という。)と${esc(s.cOtsu || "____________")}(以下「乙」という。)とは、甲が乙に委託する業務に関し、次のとおり業務委託契約(以下「本契約」という。)を締結する。</div>`;
+
+  arts.forEach((a, i) => {
+    html += `<div class="c-art"><h3>第${i + 1}条(${esc(a.title)})</h3>`;
+    if (Array.isArray(a.body)) {
+      const isEnum = a.body.every((t, j) => j === 0 || /^\(\d+\)/.test(t));
+      if (isEnum && a.body.length > 1 && /^\(\d+\)/.test(a.body[1])) {
+        html += `<p>${esc(a.body[0])}</p>`;
+        for (let j = 1; j < a.body.length; j++) html += `<p style="padding-left:1.2em">${esc(a.body[j])}</p>`;
+      } else {
+        html += `<ol>` + a.body.map(t => `<li>${esc(t)}</li>`).join("") + `</ol>`;
+      }
+    } else {
+      html += `<p>${esc(a.body)}</p>`;
+    }
+    html += `</div>`;
+  });
+
+  html += `<div class="c-close">${s.cElectronic
+    ? "本契約の成立を証するため、本契約書を電磁的記録により作成し、甲乙双方が電子署名または記名に代わる措置を講じたうえ、各自その電磁的記録を保管する。"
+    : "本契約の成立を証するため、本書2通を作成し、甲乙記名押印のうえ、各自1通を保有する。"}</div>`;
+  html += `<div class="c-date">${jdate(s.cDate)}</div>`;
+  html += `<div class="c-sign">
+    <div class="party"><div class="role">甲</div><div class="lines">
+      <div>${esc(s.cKouAddr || "")}</div>
+      <div class="who"><span>${esc(s.cKou || "")}</span><span class="in">${s.cElectronic ? "" : "㊞"}</span></div>
+    </div></div>
+    <div class="party"><div class="role">乙</div><div class="lines">
+      <div>${esc(s.cOtsuAddr || "")}</div>
+      <div class="who"><span>${esc(s.cOtsu || "")}</span><span class="in">${s.cElectronic ? "" : "㊞"}</span></div>
+    </div></div>
+  </div>`;
+
+  $("paper").innerHTML = html;
+  document.title = `業務委託契約書(${isUkeoi ? "請負" : "準委任"}) — Contract Studio`;
+  try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) {}
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  $("cDate").value = new Date().toISOString().slice(0, 10);
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) setState(JSON.parse(raw));
+  } catch (e) {}
+  for (const f of FIELDS) $(f).addEventListener("input", render);
+  for (const c of CHECKS) $(c).addEventListener("change", render);
+
+  $("jsonExport").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(getState(), null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "contract-studio-backup.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  $("jsonImport").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try { setState(JSON.parse(rd.result)); render(); alert("読み込みました。"); }
+      catch (err) { alert("読み込みに失敗しました: " + err.message); }
+      e.target.value = "";
+    };
+    rd.readAsText(file);
+  });
+
+  render();
+});
+
+window.__contractStudio = { getState, setState, render, buildArticles: () => buildArticles(getState()) };
+</script>
+</body>
+</html>

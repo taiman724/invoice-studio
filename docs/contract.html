@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contract Studio — 業務委託契約書ジェネレーター(完全オフライン・買い切り)</title>
+<meta name="description" content="準委任/請負を切り替えるだけで条文構成が変わる業務委託契約書ジェネレーター。電子契約対応、反社条項・損害賠償上限・知財帰属も選ぶだけ。完全オフライン。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Contract Studio — 業務委託契約書ジェネレーター(完全オフライン・買い切り)">
+<meta property="og:description" content="準委任/請負の切替で条文が自動構成。電子契約対応。フリーランスの契約書のたたき台を数分で。買い切り$13。">
+<meta property="og:url" content="https://taiman724.github.io/invoice-studio/contract.html">
+<meta property="og:image" content="https://taiman724.github.io/invoice-studio/assets/screenshot-contract.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root { --accent: #7c3aed; --ink: #1f2937; --muted: #6b7280; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, system-ui, sans-serif; color: var(--ink); line-height: 1.7; background: #fff; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+  header.hero { background: linear-gradient(160deg, #4c1d95, #7c3aed 60%, #8b5cf6); color: #fff; padding: 60px 0 52px; text-align: center; }
+  .hero h1 { font-size: clamp(25px, 5vw, 38px); margin: 0 0 12px; }
+  .hero p.lead { font-size: clamp(15px, 2.5vw, 17px); opacity: .93; margin: 0 auto 26px; max-width: 660px; }
+  .cta { display: inline-block; padding: 14px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 16px; margin: 6px; }
+  .cta.buy { background: #fff; color: #4c1d95; }
+  .cta.demo { background: rgba(255,255,255,.16); color: #fff; border: 1px solid rgba(255,255,255,.5); }
+  section { padding: 44px 0; }
+  section.alt { background: #f3f4f6; }
+  h2 { font-size: 23px; text-align: center; margin: 0 0 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; }
+  .card h3 { margin: 0 0 8px; font-size: 15.5px; color: var(--accent); }
+  .card p { margin: 0; font-size: 14px; color: #374151; }
+  .shot { max-width: 560px; margin: 0 auto; }
+  .shot img { width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+  .buy-box { background: #fff; border: 2px solid var(--accent); border-radius: 14px; padding: 26px; text-align: center; max-width: 560px; margin: 0 auto; }
+  .buy-box .price { font-size: 34px; font-weight: 800; color: var(--accent); }
+  .buy-box ol { text-align: left; font-size: 14px; color: #374151; max-width: 440px; margin: 14px auto; padding-left: 22px; }
+  .buy-box .cta.buy { background: var(--accent); color: #fff; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .legal { background: #fef9c3; border: 1px solid #fde047; border-radius: 10px; font-size: 13px; color: #713f12; padding: 14px 16px; max-width: 720px; margin: 26px auto 0; }
+  .crosssell { text-align: center; font-size: 14px; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px; padding: 14px; max-width: 680px; margin: 24px auto 0; }
+  .crosssell a { color: var(--accent); font-weight: 700; }
+  footer { padding: 26px 0 38px; text-align: center; font-size: 12.5px; color: var(--muted); }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>「契約書なしで受けた仕事」を、<br>今日で最後にする。</h1>
+    <p class="lead">Contract Studio は、準委任/請負を切り替えるだけで条文構成が自動で変わる業務委託契約書ジェネレーター。報酬・知財・秘密保持・損害賠償上限・反社条項まで、選ぶだけで筋の通ったたたき台が数分で完成。完全オフラインで契約内容は端末の外に出ません。</p>
+    <a class="cta demo" href="./contract-demo.html">▶ ブラウザでデモを試す(無料)</a>
+    <a class="cta buy" href="#buy">製品版を購入 — $13</a>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>19条構成の本格的な契約書を、フォーム入力だけで</h2>
+    <div class="shot"><img src="./assets/screenshot-contract.png" alt="生成された業務委託契約書のプレビュー"></div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>フリーランスを守るための機能</h2>
+    <div class="grid">
+      <div class="card"><h3>準委任 / 請負の自動切替</h3><p>請負なら納入・検収・契約不適合責任、準委任なら善管注意義務・指揮命令排除(偽装請負対策)へ、条文構成ごと切り替わります。</p></div>
+      <div class="card"><h3>条番号は常に自動連番</h3><p>条を増減しても「第○条の検収完了後」のような条文間参照まで自動で追随。手作業のズレが起きません。</p></div>
+      <div class="card"><h3>損害賠償の上限条項</h3><p>「直近6か月/12か月の報酬総額を上限」を選ぶだけ。青天井の賠償リスクからあなたを守ります。</p></div>
+      <div class="card"><h3>知的財産権の帰属を選択</h3><p>支払完了後に甲へ移転(自衛つき: 既存資産・汎用ノウハウは留保)か、乙に留保+利用許諾か。</p></div>
+      <div class="card"><h3>電子契約モード</h3><p>印紙不要の電磁的記録文言+押印欄なしの締結文に切替。クラウドサイン等での締結用PDFがすぐ作れます。</p></div>
+      <div class="card"><h3>完全オフライン</h3><p>契約相手や金額がサーバーに送られることは一切ありません。自動保存+JSONバックアップ。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="buy">
+  <div class="wrap">
+    <div class="buy-box">
+      <h2 style="margin-bottom:8px">製品版を購入</h2>
+      <div class="price">$13 <span class="muted" style="font-size:15px">(約¥1,980・買い切り)</span></div>
+      <p>透かしなしの製品版HTML+マニュアルをお届けします。</p>
+      <ol>
+        <li>下のボタンから GitHub Sponsors で <b>One-time(一回限り)$13</b> をスポンサーする</li>
+        <li>24時間以内に、GitHubアカウント宛にダウンロード先をご連絡します</li>
+      </ol>
+      <a class="cta buy" href="https://github.com/sponsors/taiman724?frequency=one-time&amount=13">GitHub Sponsors で購入する</a>
+      <p class="muted" style="margin-top:12px">※購入時のメッセージ欄に「Contract Studio」とお書きください。</p>
+    </div>
+    <div class="crosssell">
+      🧰 フリーランス3点セット(契約 → 請求 → 帳簿)は <b>$25</b>:
+      <a href="./contract.html">Contract Studio</a> +
+      <a href="./index.html">Invoice Studio</a> +
+      <a href="./expense.html">Expense Studio</a>(メッセージ欄に「3点セット」と記入)
+    </div>
+    <div class="legal">
+      <b>必ずお読みください:</b> 本ツールは一般的な条文構成のたたき台を作る補助ツールであり、法的助言ではありません。個別の取引への適否・有効性は保証されません。重要な契約は弁護士のリーガルチェックを受けてください。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Contract Studio v1.0</p>
+    <p><a href="https://github.com/taiman724">© 2026 taiman724</a> — Built with AI assistance (Claude Code), reviewed and shipped by a human.</p>
+  </div>
+</footer>
+
+</body>
+</html>
