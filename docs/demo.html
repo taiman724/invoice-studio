@@ -664,8 +664,29 @@ function renderPresetList() {
 /* ---------- events ---------- */
 function refresh() { formToState(); renderPreview(); persist(); }
 
+function applySampleIfFresh() {
+  if (state.clientName || state.myName || state.items.some(it => it.name)) return;
+  const due = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+  state = Object.assign(defaultState(), {
+    docNo: "INV-2026-0001", dueDate: due,
+    clientName: "株式会社サンプル商事", clientHonor: "御中",
+    clientAddr: "〒100-0001\n東京都千代田区千代田1-1-1\nサンプルビル 5F",
+    myName: "山田デザイン事務所", myReg: "T1234567890123",
+    myAddr: "〒150-0001\n東京都渋谷区神宮前1-2-3\nTEL: 03-0000-0000",
+    items: [
+      { name: "コーポレートサイト デザイン一式", qty: 1, unit: "式", price: 280000, rate: 10 },
+      { name: "ロゴデザイン", qty: 1, unit: "式", price: 80000, rate: 10 },
+      { name: "参考書籍(軽減税率対象)", qty: 2, unit: "冊", price: 1800, rate: 8 },
+    ],
+    withholding: true,
+    bank: "みずほ銀行 渋谷支店\n普通 1234567\nヤマダ タロウ",
+    notes: "お振込手数料は御社にてご負担をお願いいたします。",
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loadPersisted();
+  applySampleIfFresh();
   stateToForm();
   renderPreview();
   renderPresetList();
